@@ -1,0 +1,716 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Ascend · a leveling system for real life</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme: dark;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  --abyss:#04050d;
+  --deep:#070b1d;
+  --panel:rgba(9,18,48,.68);
+  --line:rgba(111,211,255,.55);
+  --line-soft:rgba(111,211,255,.22);
+  --cyan:#6fd3ff;
+  --blue:#3b8cff;
+  --violet:#9b6bff;
+  --text:#e6f0ff;
+  --mute:#8da2c8;
+  --danger:#ff5a6e;
+  --gold:#ffd36b;
+  --display:"Chakra Petch", "Segoe UI", system-ui, sans-serif;
+  --body:"Barlow", "Segoe UI", system-ui, sans-serif;
+}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px);}
+*,*::before,*::after{box-sizing:inherit}
+body{
+  margin:0;min-height:100%;color:var(--text);font-family:var(--body);font-size:16px;line-height:1.5;
+  background:
+    radial-gradient(900px 500px at 85% -10%, rgba(155,107,255,.22), transparent 60%),
+    radial-gradient(800px 600px at 0% 0%, rgba(59,140,255,.20), transparent 60%),
+    linear-gradient(180deg,var(--deep),var(--abyss) 70%);
+  background-color:var(--abyss);
+  background-attachment:fixed;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;opacity:.5;
+  background-image:
+    linear-gradient(rgba(111,211,255,.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(111,211,255,.05) 1px, transparent 1px);
+  background-size:44px 44px;
+  mask-image:radial-gradient(ellipse at 50% 20%, #000 20%, transparent 75%);
+  -webkit-mask-image:radial-gradient(ellipse at 50% 20%, #000 20%, transparent 75%);
+}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+
+.wrap{position:relative;max-width:1180px;margin:0 auto;padding:28px 20px 64px}
+
+/* header */
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.brand{font-family:var(--display);font-weight:700;font-size:clamp(40px,7vw,68px);line-height:.95;margin:0;letter-spacing:.04em;
+  text-shadow:0 0 18px rgba(111,211,255,.55),0 0 48px rgba(59,140,255,.4)}
+.tag{margin:8px 0 0;color:var(--mute);max-width:46ch}
+.date{font-family:var(--display);color:var(--mute);font-size:14px}
+
+/* windows */
+.win{position:relative;background:var(--panel);border:1px solid var(--line-soft);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  box-shadow:inset 0 0 40px rgba(59,140,255,.07),0 0 34px rgba(59,140,255,.12)}
+.win::before,.win::after{content:"";position:absolute;width:16px;height:16px;border:2px solid var(--cyan);pointer-events:none}
+.win::before{top:-2px;left:-2px;border-right:0;border-bottom:0}
+.win::after{bottom:-2px;right:-2px;border-left:0;border-top:0}
+.win-title{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 16px;
+  font-family:var(--display);font-size:12px;letter-spacing:.16em;color:var(--cyan);border-bottom:1px solid var(--line-soft)}
+.win-body{padding:16px}
+
+/* notification */
+.notice{margin-bottom:20px;border-color:var(--line)}
+.notice .win-body{display:flex;gap:14px;align-items:flex-start;min-height:64px}
+.notice .ico{flex:none;width:26px;height:26px;border:2px solid var(--cyan);border-radius:50%;display:grid;place-items:center;
+  font-family:var(--display);font-weight:700;color:var(--cyan);font-size:15px}
+.notice p{margin:0;font-size:17px}
+.notice.bad{border-color:rgba(255,90,110,.7)}
+.notice.bad .ico{border-color:var(--danger);color:var(--danger)}
+.notice.bad .win-title{color:var(--danger)}
+.caret{display:inline-block;width:8px;height:1.05em;background:var(--cyan);vertical-align:-3px;margin-left:2px;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+
+/* layout */
+.grid{display:grid;grid-template-columns:minmax(300px,390px) minmax(0,1fr);gap:24px;align-items:start}
+.side{position:sticky;top:calc(16px + env(safe-area-inset-top,0px))}
+@media (max-width:900px){.grid{grid-template-columns:1fr}.side{position:static}}
+
+/* status */
+.id{display:flex;gap:16px;align-items:center}
+.rank{flex:none;width:84px;height:84px;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:58px;line-height:1;
+  border:2px solid currentColor;background:rgba(0,0,0,.25);color:var(--cyan);
+  text-shadow:0 0 16px currentColor;box-shadow:0 0 22px -4px currentColor, inset 0 0 22px -8px currentColor}
+.rank.rE{color:#8da2c8}.rank.rD{color:#58e0c4}.rank.rC{color:#6fd3ff}.rank.rB{color:#4f95ff}.rank.rA{color:#b48aff}.rank.rS{color:var(--gold)}
+.who{min-width:0;flex:1}
+.name{width:100%;background:transparent;border:0;border-bottom:1px dashed var(--line-soft);font-family:var(--display);font-size:24px;font-weight:600;padding:2px 0;color:var(--text)}
+.name:focus-visible{outline:none;border-bottom-color:var(--cyan)}
+.lvl{font-family:var(--display);color:var(--mute);margin-top:4px;font-size:15px}
+.lvl b{color:var(--text);font-size:20px}
+.bar{height:10px;background:rgba(111,211,255,.1);border:1px solid var(--line-soft);position:relative;overflow:hidden}
+.bar>i{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(90deg,var(--blue),var(--cyan));box-shadow:0 0 14px var(--cyan);transition:width .5s ease}
+.bar.v>i{background:linear-gradient(90deg,var(--violet),#c9a8ff);box-shadow:0 0 14px var(--violet)}
+.meta{display:flex;justify-content:space-between;gap:10px;margin:8px 0 0;font-size:14px;color:var(--mute);font-family:var(--display)}
+.radar{display:block;margin:12px auto 4px;width:100%;max-width:290px;height:auto;overflow:visible}
+.radar text{font-family:var(--display);font-size:11px;fill:var(--mute)}
+.stats{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:8px}
+.stats li{display:grid;grid-template-columns:44px 1fr auto auto;gap:10px;align-items:center}
+.stats .ab{font-family:var(--display);color:var(--cyan);font-weight:600}
+.stats .nm{font-size:15px}
+.stats .val{font-family:var(--display);font-size:20px;font-weight:600;min-width:2ch;text-align:right}
+.plus{width:30px;height:30px;border:1px solid var(--cyan);background:rgba(111,211,255,.1);color:var(--cyan);font-family:var(--display);font-size:18px;line-height:1;padding:0}
+.plus:hover{background:rgba(111,211,255,.28)}
+.plus[hidden]{display:none}
+.pts{margin-top:12px;padding:8px 12px;border:1px dashed var(--violet);color:#d3bcff;font-size:15px}
+
+/* tabs */
+.tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px}
+.tab{background:transparent;border:1px solid var(--line-soft);padding:9px 16px;font-family:var(--display);font-size:15px;color:var(--mute)}
+.tab[aria-selected="true"]{color:var(--text);border-color:var(--cyan);background:rgba(111,211,255,.12);box-shadow:0 0 18px -4px var(--cyan)}
+.tab:hover{color:var(--text)}
+.panel[hidden]{display:none}
+.intro{margin:0 0 14px;color:var(--mute);max-width:62ch}
+.sum{display:flex;gap:18px;flex-wrap:wrap;align-items:center;margin-bottom:14px;font-family:var(--display);font-size:15px}
+.sum b{font-size:22px}
+.sum .grow{flex:1;min-width:140px}
+
+/* rows */
+.list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.row{display:grid;grid-template-columns:auto 1fr auto auto;gap:12px;align-items:center;padding:10px 12px;border:1px solid var(--line-soft);background:rgba(4,8,24,.45)}
+.row.done{border-color:rgba(111,211,255,.5);background:rgba(59,140,255,.1)}
+.row.done .t{color:var(--mute);text-decoration:line-through;text-decoration-color:rgba(111,211,255,.5)}
+.chk{width:28px;height:28px;border:2px solid var(--line);background:transparent;display:grid;place-items:center;padding:0;color:transparent;font-weight:700}
+.chk[aria-checked="true"]{background:var(--cyan);color:#021226;box-shadow:0 0 14px var(--cyan)}
+.t{min-width:0;overflow-wrap:anywhere}
+.chip{font-family:var(--display);font-size:13px;color:var(--cyan);border:1px solid var(--line-soft);padding:2px 8px;white-space:nowrap}
+.chip.xp{color:#cdb6ff;border-color:rgba(155,107,255,.5)}
+.x{background:transparent;border:0;color:var(--mute);width:30px;height:30px;font-size:20px;line-height:1;padding:0}
+.x:hover{color:var(--danger)}
+.row .sub{display:block;font-size:13px;color:var(--mute);margin-top:2px}
+.row .prog{grid-column:2 / -1}
+.row.wide{grid-template-columns:1fr auto auto}
+.act{background:rgba(111,211,255,.1);border:1px solid var(--cyan);color:var(--cyan);padding:6px 14px;font-family:var(--display);font-size:14px;white-space:nowrap}
+.act:hover:not(:disabled){background:rgba(111,211,255,.26)}
+.act:disabled{opacity:.45;cursor:default;border-color:var(--line-soft);color:var(--mute)}
+.empty{padding:22px;border:1px dashed var(--line-soft);color:var(--mute);text-align:center}
+.badge{font-family:var(--display);font-size:13px;padding:2px 8px;border:1px solid}
+.b-rec{color:var(--mute);border-color:var(--line-soft)}
+.b-sol{color:var(--cyan);border-color:var(--cyan)}
+.b-sha{color:#d3bcff;border-color:var(--violet);box-shadow:0 0 12px -2px var(--violet)}
+
+/* forms */
+.add{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;padding-top:16px;border-top:1px solid var(--line-soft)}
+.add input,.add select{background:rgba(4,8,24,.7);border:1px solid var(--line-soft);padding:9px 10px;min-width:0}
+.add input[type=text]{flex:1 1 220px}
+.add input[type=number]{width:84px}
+.add input:focus-visible,.add select:focus-visible{outline:none;border-color:var(--cyan)}
+.add .act{padding:9px 18px}
+.field{font-size:13px;color:var(--mute);display:flex;flex-direction:column;gap:2px}
+
+/* log */
+.log{list-style:none;margin:0;padding:0;display:grid;gap:6px;font-size:15px}
+.log li{display:grid;grid-template-columns:110px 1fr;gap:12px;padding:6px 0;border-bottom:1px solid rgba(111,211,255,.1)}
+.log time{color:var(--mute);font-family:var(--display);font-size:13px}
+.log .pen{color:var(--danger)}
+@media (max-width:520px){
+  .row{grid-template-columns:auto 1fr auto}
+  .row .chip.stat{display:none}
+  .log li{grid-template-columns:1fr}
+}
+
+.foot{margin-top:28px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:var(--mute);font-size:14px}
+.link{background:none;border:0;color:var(--mute);text-decoration:underline;padding:0}
+.link.warn{color:var(--danger)}
+
+/* toast */
+.toasts{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));display:grid;gap:8px;z-index:30;width:min(92vw,420px)}
+.toast{background:rgba(6,14,40,.95);border:1px solid var(--cyan);padding:10px 14px;font-family:var(--display);font-size:15px;box-shadow:0 0 24px rgba(59,140,255,.4);animation:tin .25s ease}
+.toast.bad{border-color:var(--danger)}
+@keyframes tin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* level up */
+.ov{position:fixed;inset:0;z-index:40;display:none;place-items:center;background:rgba(2,3,10,.82);padding:20px}
+.ov.on{display:grid}
+.lu{text-align:center;max-width:420px;width:100%;border-color:var(--cyan);animation:pop .5s cubic-bezier(.2,1.3,.4,1)}
+.lu h2{font-family:var(--display);font-size:clamp(38px,9vw,58px);margin:6px 0 0;letter-spacing:.08em;text-shadow:0 0 24px var(--cyan),0 0 60px var(--blue)}
+.lu .n{font-family:var(--display);font-size:22px;color:var(--cyan);margin:4px 0 8px}
+.lu p{margin:0 0 18px;color:var(--mute)}
+@keyframes pop{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:none}}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <h1 class="brand">ASCEND</h1>
+      <p class="tag">Turn your real day into a leveling system. Clear quests, raise your stats, and rank up.</p>
+    </div>
+    <div class="date" id="date"></div>
+  </header>
+
+  <section class="win notice" id="notice" aria-live="polite">
+    <div class="win-title"><span>[ NOTIFICATION ]</span></div>
+    <div class="win-body"><div class="ico">!</div><p id="noticeText"></p></div>
+  </section>
+
+  <div class="grid">
+
+    <!-- STATUS -->
+    <aside class="win side" aria-label="Hunter status">
+      <div class="win-title"><span>[ STATUS ]</span></div>
+      <div class="win-body">
+        <div class="id">
+          <div class="rank rE" id="rank" aria-label="Rank E">E</div>
+          <div class="who">
+            <input class="name" id="name" type="text" maxlength="20" value="Hunter" aria-label="Hunter name" autocomplete="off">
+            <div class="lvl">Level <b id="lvl">1</b> &nbsp;·&nbsp; <span id="rankTitle">E-rank</span></div>
+          </div>
+        </div>
+
+        <div style="margin-top:18px">
+          <div class="bar" role="progressbar" aria-label="Experience" id="xpBar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="xpFill"></i></div>
+          <div class="meta"><span id="xpText">0 / 100 XP</span><span id="streak">Streak 0 days</span></div>
+        </div>
+
+        <svg class="radar" id="radar" viewBox="0 0 240 240" role="img" aria-label="Stat radar chart"></svg>
+
+        <ul class="stats" id="statList"></ul>
+        <div class="pts" id="pts" hidden></div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main>
+      <div class="tabs" role="tablist" aria-label="Sections">
+        <button class="tab" role="tab" id="t-quests" aria-selected="true" aria-controls="p-quests" data-tab="quests">Daily quests</button>
+        <button class="tab" role="tab" id="t-dungeons" aria-selected="false" aria-controls="p-dungeons" data-tab="dungeons">Dungeons</button>
+        <button class="tab" role="tab" id="t-shadows" aria-selected="false" aria-controls="p-shadows" data-tab="shadows">Shadow army</button>
+        <button class="tab" role="tab" id="t-log" aria-selected="false" aria-controls="p-log" data-tab="log">System log</button>
+      </div>
+
+      <!-- QUESTS -->
+      <section class="win panel" id="p-quests" role="tabpanel" aria-labelledby="t-quests">
+        <div class="win-title"><span>[ DAILY QUESTS ]</span><span id="questReset"></span></div>
+        <div class="win-body">
+          <p class="intro">Do these every day. Each one gives XP and trains a stat. Clear all of them for a bonus. Miss any and the system takes XP back at midnight.</p>
+          <div class="sum">
+            <span><b id="qDone">0</b> / <span id="qTotal">0</span> cleared</span>
+            <div class="grow"><div class="bar v"><i id="qFill"></i></div></div>
+          </div>
+          <ul class="list" id="questList"></ul>
+          <form class="add" id="questForm" autocomplete="off">
+            <input type="text" id="qTitle" maxlength="80" placeholder="Add a quest, e.g. Drink 2 liters of water" aria-label="New quest" required>
+            <select id="qStat" aria-label="Stat trained"></select>
+            <select id="qXp" aria-label="XP reward">
+              <option value="10">10 XP</option><option value="20" selected>20 XP</option><option value="30">30 XP</option><option value="40">40 XP</option>
+            </select>
+            <button class="act" type="submit">Add quest</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- DUNGEONS -->
+      <section class="win panel" id="p-dungeons" role="tabpanel" aria-labelledby="t-dungeons" hidden>
+        <div class="win-title"><span>[ DUNGEONS ]</span></div>
+        <div class="win-body">
+          <p class="intro">A dungeon is a bigger goal split into steps: finish a project, run a 10K, learn a skill. Clear a step whenever you make progress. The final step pays out a large XP reward.</p>
+          <ul class="list" id="dungeonList"></ul>
+          <form class="add" id="dungeonForm" autocomplete="off">
+            <input type="text" id="dTitle" maxlength="80" placeholder="Name the dungeon, e.g. Ship my portfolio site" aria-label="Dungeon name" required>
+            <label class="field">Steps<input type="number" id="dSteps" min="2" max="30" value="7" required></label>
+            <label class="field">Stat<select id="dStat"></select></label>
+            <button class="act" type="submit" style="align-self:flex-end">Open dungeon</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- SHADOWS -->
+      <section class="win panel" id="p-shadows" role="tabpanel" aria-labelledby="t-shadows" hidden>
+        <div class="win-title"><span>[ SHADOW ARMY ]</span></div>
+        <div class="win-body">
+          <p class="intro">Habits become soldiers. Check in each day to build a streak. At 7 days a recruit becomes a soldier. At 21 days it is extracted and joins your army for good, plus 100 XP. Skip a day and the streak resets.</p>
+          <ul class="list" id="shadowList"></ul>
+          <form class="add" id="shadowForm" autocomplete="off">
+            <input type="text" id="sName" maxlength="60" placeholder="Name a habit, e.g. Cold shower" aria-label="Habit name" required>
+            <button class="act" type="submit">Recruit habit</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- LOG -->
+      <section class="win panel" id="p-log" role="tabpanel" aria-labelledby="t-log" hidden>
+        <div class="win-title"><span>[ SYSTEM LOG ]</span></div>
+        <div class="win-body">
+          <ul class="log" id="logList"></ul>
+        </div>
+      </section>
+
+      <div class="foot">
+        <span>Progress is saved in this browser only.</span>
+        <button class="link" id="resetBtn" type="button">Reset system</button>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<div class="ov" id="ov" role="dialog" aria-modal="true" aria-labelledby="luTitle">
+  <div class="win lu">
+    <div class="win-title"><span>[ NOTIFICATION ]</span></div>
+    <div class="win-body">
+      <h2 id="luTitle">LEVEL UP</h2>
+      <div class="n" id="luLevel">Level 2</div>
+      <p id="luText">+3 stat points available.</p>
+      <button class="act" id="luBtn" type="button" style="padding:10px 28px;font-size:16px">Continue</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var KEY = 'ascend-system-v1';
+  var mem = null;
+  var STATS = [
+    {k:'str', ab:'STR', n:'Strength'},
+    {k:'vit', ab:'VIT', n:'Vitality'},
+    {k:'int', ab:'INT', n:'Intellect'},
+    {k:'dis', ab:'DIS', n:'Discipline'},
+    {k:'foc', ab:'FOC', n:'Focus'}
+  ];
+  var RANKS = [
+    {l:'S', min:50, t:'S-rank · Monarch'},
+    {l:'A', min:35, t:'A-rank · Elite'},
+    {l:'B', min:20, t:'B-rank · Veteran'},
+    {l:'C', min:10, t:'C-rank · Fighter'},
+    {l:'D', min:5,  t:'D-rank · Challenger'},
+    {l:'E', min:1,  t:'E-rank · Newcomer'}
+  ];
+  var $ = function(id){ return document.getElementById(id); };
+  var z = function(n){ return String(n).padStart(2,'0'); };
+  function todayStr(){ var d=new Date(); return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate()); }
+  function dayDiff(a,b){ return Math.round((new Date(b+'T00:00:00') - new Date(a+'T00:00:00'))/86400000); }
+  function uid(){ return Math.random().toString(36).slice(2,9); }
+  function esc(s){ return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+  function statName(k){ for(var i=0;i<STATS.length;i++) if(STATS[i].k===k) return STATS[i]; return STATS[0]; }
+
+  function fresh(){
+    return {
+      name:'Hunter', xp:0, level:1, points:0, streak:0, lastClear:'',
+      stats:{str:5,vit:5,int:5,dis:5,foc:5}, sp:{},
+      quests:[
+        {id:uid(), title:'Move your body for 30 minutes', stat:'str', xp:20},
+        {id:uid(), title:'90 minutes of focused work on your hardest task', stat:'foc', xp:30},
+        {id:uid(), title:'Read 20 pages', stat:'int', xp:20},
+        {id:uid(), title:'In bed by 11 pm', stat:'vit', xp:20},
+        {id:uid(), title:'Plan tomorrow in 5 minutes', stat:'dis', xp:15}
+      ],
+      done:{date:'', ids:[], bonus:false},
+      dungeons:[], shadows:[], log:[], seen:false
+    };
+  }
+
+  function load(){
+    var base = fresh();
+    try {
+      var raw = window.localStorage.getItem(KEY);
+      if(raw){ var o = JSON.parse(raw); for(var k in o) base[k] = o[k]; }
+    } catch(e){ if(mem){ base = mem; } }
+    return base;
+  }
+  var S = load();
+  function save(){
+    mem = S;
+    try { window.localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){}
+  }
+
+  function need(l){ return 100 + (l-1)*40; }
+  function rankOf(l){ for(var i=0;i<RANKS.length;i++) if(l>=RANKS[i].min) return RANKS[i]; return RANKS[RANKS.length-1]; }
+
+  function logAdd(msg, bad){
+    S.log.unshift({t:Date.now(), m:msg, bad:!!bad});
+    S.log = S.log.slice(0,40);
+  }
+
+  var pendingLevel = 0;
+  function gain(n, stat){
+    S.xp += n;
+    if(stat){
+      S.sp[stat] = (S.sp[stat]||0) + n;
+      while(S.sp[stat] >= 30){ S.sp[stat] -= 30; S.stats[stat]++; }
+    }
+    while(S.xp >= need(S.level)){
+      S.xp -= need(S.level); S.level++; S.points += 3; pendingLevel = S.level;
+      logAdd('Level up. You reached level '+S.level+'.');
+    }
+  }
+
+  /* day rollover + penalty */
+  var penaltyMsg = '';
+  function rollDay(){
+    var t = todayStr();
+    if(S.done.date === t) return false;
+    if(S.done.date){
+      var cleared = S.quests.filter(function(q){ return S.done.ids.indexOf(q.id) > -1; }).length;
+      var missed = S.quests.length - cleared;
+      if(missed > 0){
+        var loss = Math.min(S.xp, missed*15);
+        S.xp -= loss; S.streak = 0;
+        penaltyMsg = 'Penalty: '+missed+' quest'+(missed>1?'s':'')+' left undone yesterday. '+loss+' XP lost, streak reset.';
+        logAdd(penaltyMsg, true);
+      }
+    }
+    S.done = {date:t, ids:[], bonus:false};
+    return true;
+  }
+
+  /* toast */
+  function toast(msg, bad){
+    var el = document.createElement('div');
+    el.className = 'toast'+(bad?' bad':'');
+    el.textContent = msg;
+    $('toasts').appendChild(el);
+    setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 2600);
+  }
+
+  /* typed notice */
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var typer = null;
+  function typeNotice(text, bad){
+    var box = $('notice'), p = $('noticeText');
+    box.classList.toggle('bad', !!bad);
+    if(typer) clearInterval(typer);
+    if(reduce){ p.textContent = text; return; }
+    var i = 0; p.innerHTML = '<span class="caret"></span>';
+    typer = setInterval(function(){
+      i++;
+      p.textContent = text.slice(0,i);
+      var c = document.createElement('span'); c.className='caret'; p.appendChild(c);
+      if(i >= text.length){ clearInterval(typer); typer=null; setTimeout(function(){ if(c.parentNode) c.parentNode.removeChild(c); }, 1200); }
+    }, 22);
+  }
+  function bootMessage(){
+    if(penaltyMsg) return typeNotice(penaltyMsg, true);
+    var rem = S.quests.length - S.done.ids.length;
+    if(!S.seen){ S.seen = true; save(); return typeNotice('Welcome. Your daily quests are ready. Clear them to earn XP and raise your stats.'); }
+    if(S.quests.length && rem <= 0) return typeNotice('All of today\'s quests are cleared. Check your dungeons and shadow army.');
+    typeNotice(rem+' quest'+(rem===1?'':'s')+' remain today. '+(S.streak>0?'Current streak: '+S.streak+' day'+(S.streak===1?'':'s')+'.':'Clear them all to start a streak.'));
+  }
+
+  /* ---------- render ---------- */
+  function renderStatus(){
+    var r = rankOf(S.level);
+    var rk = $('rank'); rk.textContent = r.l; rk.className = 'rank r'+r.l; rk.setAttribute('aria-label','Rank '+r.l);
+    $('lvl').textContent = S.level;
+    $('rankTitle').textContent = r.t;
+    var nd = need(S.level), pct = Math.min(100, Math.round(S.xp/nd*100));
+    $('xpFill').style.width = pct+'%';
+    $('xpBar').setAttribute('aria-valuenow', pct);
+    $('xpText').textContent = S.xp+' / '+nd+' XP';
+    var effStreak = (S.lastClear && dayDiff(S.lastClear, todayStr()) <= 1) ? S.streak : 0;
+    $('streak').textContent = 'Streak '+effStreak+' day'+(effStreak===1?'':'s');
+    if(document.activeElement !== $('name')) $('name').value = S.name;
+
+    /* stats list */
+    var h = '';
+    STATS.forEach(function(s){
+      h += '<li><span class="ab">'+s.ab+'</span><span class="nm">'+s.n+'</span><span class="val">'+S.stats[s.k]+'</span>'+
+           '<button class="plus" type="button" data-alloc="'+s.k+'" aria-label="Add a point to '+s.n+'"'+(S.points>0?'':' hidden')+'>+</button></li>';
+    });
+    $('statList').innerHTML = h;
+    var pts = $('pts');
+    if(S.points>0){ pts.hidden=false; pts.textContent = S.points+' unspent point'+(S.points===1?'':'s')+'. Tap + to assign.'; } else { pts.hidden=true; }
+
+    /* radar */
+    var cx=120, cy=120, R=82;
+    var vals = STATS.map(function(s){ return S.stats[s.k]; });
+    var max = Math.max(20, Math.max.apply(null, vals)+4);
+    function pt(i, f){ var a = (-90 + i*72) * Math.PI/180; return [cx + Math.cos(a)*R*f, cy + Math.sin(a)*R*f]; }
+    var svg = '';
+    [0.25,0.5,0.75,1].forEach(function(f){
+      svg += '<polygon points="'+STATS.map(function(_,i){ return pt(i,f).join(','); }).join(' ')+'" fill="none" stroke="rgba(111,211,255,'+(f===1?.4:.16)+')" stroke-width="1"/>';
+    });
+    STATS.forEach(function(_,i){ var p=pt(i,1); svg += '<line x1="'+cx+'" y1="'+cy+'" x2="'+p[0]+'" y2="'+p[1]+'" stroke="rgba(111,211,255,.16)"/>'; });
+    var poly = vals.map(function(v,i){ return pt(i, v/max).join(','); }).join(' ');
+    svg += '<polygon points="'+poly+'" fill="rgba(59,140,255,.28)" stroke="#6fd3ff" stroke-width="2" style="filter:drop-shadow(0 0 6px #6fd3ff)"/>';
+    vals.forEach(function(v,i){ var p=pt(i,v/max); svg += '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="3" fill="#6fd3ff"/>'; });
+    STATS.forEach(function(s,i){
+      var p = pt(i,1.2), a = (-90+i*72);
+      var anchor = Math.abs(Math.cos(a*Math.PI/180))<.2 ? 'middle' : (Math.cos(a*Math.PI/180)>0 ? 'start':'end');
+      svg += '<text x="'+p[0]+'" y="'+(p[1]+4)+'" text-anchor="'+anchor+'">'+s.ab+' '+vals[i]+'</text>';
+    });
+    $('radar').innerHTML = svg;
+  }
+
+  function renderQuests(){
+    var total = S.quests.length;
+    var doneN = S.quests.filter(function(q){ return S.done.ids.indexOf(q.id)>-1; }).length;
+    $('qDone').textContent = doneN; $('qTotal').textContent = total;
+    $('qFill').style.width = total ? Math.round(doneN/total*100)+'%' : '0%';
+    $('questReset').textContent = 'Resets at midnight';
+    if(!total){ $('questList').innerHTML = '<li class="empty">No quests yet. Add your first one below.</li>'; return; }
+    $('questList').innerHTML = S.quests.map(function(q){
+      var d = S.done.ids.indexOf(q.id)>-1, st = statName(q.stat);
+      return '<li class="row'+(d?' done':'')+'">'+
+        '<button class="chk" type="button" role="checkbox" aria-checked="'+d+'" aria-label="'+(d?'Undo ':'Complete ')+esc(q.title)+'" data-quest="'+q.id+'">'+(d?'✓':'')+'</button>'+
+        '<span class="t">'+esc(q.title)+'</span>'+
+        '<span class="chip stat">'+st.ab+'</span><span class="chip xp">+'+q.xp+' XP</span>'+
+        '</li>';
+    }).join('');
+    // delete buttons appended via second row? keep simple: delete from long press not needed; add inline
+    var rows = $('questList').children;
+    for(var i=0;i<rows.length;i++){
+      var b = document.createElement('button');
+      b.className='x'; b.type='button'; b.setAttribute('data-delquest', S.quests[i].id); b.setAttribute('aria-label','Delete quest '+S.quests[i].title); b.textContent='×';
+      rows[i].appendChild(b);
+    }
+    for(var j=0;j<rows.length;j++) rows[j].style.gridTemplateColumns='auto 1fr auto auto auto';
+  }
+
+  function renderDungeons(){
+    if(!S.dungeons.length){ $('dungeonList').innerHTML = '<li class="empty">No open dungeons. Open one below to turn a big goal into steps.</li>'; return; }
+    $('dungeonList').innerHTML = S.dungeons.map(function(d){
+      var pct = Math.round(d.progress/d.steps*100), st = statName(d.stat), reward = 40 + d.steps*10;
+      return '<li class="row wide'+(d.cleared?' done':'')+'">'+
+        '<div><span class="t">'+esc(d.title)+'</span>'+
+        '<span class="sub">'+(d.cleared?'Dungeon cleared':'Step '+d.progress+' of '+d.steps+' · reward '+reward+' XP · trains '+st.n)+'</span>'+
+        '<div class="bar" style="margin-top:8px"><i style="width:'+pct+'%"></i></div></div>'+
+        (d.cleared ? '<span class="badge b-sha">Cleared</span>' : '<button class="act" type="button" data-step="'+d.id+'">Clear a step</button>')+
+        '<button class="x" type="button" data-deldungeon="'+d.id+'" aria-label="Delete dungeon '+esc(d.title)+'">×</button>'+
+        '</li>';
+    }).join('');
+  }
+
+  function effStreak(s){ return (s.last && dayDiff(s.last, todayStr()) <= 1) ? s.streak : 0; }
+  function renderShadows(){
+    if(!S.shadows.length){ $('shadowList').innerHTML = '<li class="empty">Your army is empty. Recruit a habit below.</li>'; return; }
+    var t = todayStr();
+    $('shadowList').innerHTML = S.shadows.map(function(s){
+      var st = effStreak(s), pct = Math.min(100, Math.round(st/21*100));
+      var badge = (s.extracted||st>=21) ? '<span class="badge b-sha">Shadow</span>' : st>=7 ? '<span class="badge b-sol">Soldier</span>' : '<span class="badge b-rec">Recruit</span>';
+      var doneToday = s.last === t;
+      return '<li class="row wide">'+
+        '<div><span class="t">'+esc(s.name)+'</span> '+badge+
+        '<span class="sub">'+st+'-day streak · best '+(s.best||0)+(s.extracted?' · extracted':'')+'</span>'+
+        '<div class="bar v" style="margin-top:8px"><i style="width:'+pct+'%"></i></div></div>'+
+        '<button class="act" type="button" data-checkin="'+s.id+'"'+(doneToday?' disabled':'')+'>'+(doneToday?'Checked in':'Check in')+'</button>'+
+        '<button class="x" type="button" data-delshadow="'+s.id+'" aria-label="Release '+esc(s.name)+'">×</button>'+
+        '</li>';
+    }).join('');
+  }
+
+  function renderLog(){
+    if(!S.log.length){ $('logList').innerHTML = '<li class="empty" style="display:block">Nothing logged yet. Clear a quest to begin.</li>'; return; }
+    $('logList').innerHTML = S.log.map(function(e){
+      var d = new Date(e.t);
+      return '<li><time>'+d.toLocaleString([], {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'})+'</time><span class="'+(e.bad?'pen':'')+'">'+esc(e.m)+'</span></li>';
+    }).join('');
+  }
+
+  function render(){
+    renderStatus(); renderQuests(); renderDungeons(); renderShadows(); renderLog();
+    if(pendingLevel){ showLevelUp(pendingLevel); pendingLevel = 0; }
+  }
+
+  /* level up */
+  function showLevelUp(l){
+    $('luLevel').textContent = 'Level '+l;
+    $('luText').textContent = '+3 stat points available. Assign them in your status window.';
+    $('ov').classList.add('on');
+    $('luBtn').focus();
+  }
+  $('luBtn').addEventListener('click', function(){ $('ov').classList.remove('on'); });
+
+  /* ---------- actions ---------- */
+  function toggleQuest(id){
+    var q = S.quests.filter(function(x){ return x.id===id; })[0]; if(!q) return;
+    var i = S.done.ids.indexOf(id);
+    if(i === -1){
+      S.done.ids.push(id);
+      gain(q.xp, q.stat);
+      logAdd('Quest cleared: '+q.title+' (+'+q.xp+' XP)');
+      toast('+'+q.xp+' XP · '+statName(q.stat).n);
+      if(!S.done.bonus && S.quests.every(function(x){ return S.done.ids.indexOf(x.id)>-1; })){
+        S.done.bonus = true;
+        S.streak = (S.lastClear && dayDiff(S.lastClear, todayStr())===1) ? S.streak+1 : 1;
+        S.lastClear = todayStr();
+        gain(30);
+        logAdd('All daily quests cleared. +30 bonus XP. Streak: '+S.streak+'.');
+        toast('All quests cleared · +30 bonus XP');
+      }
+    } else {
+      S.done.ids.splice(i,1);
+      S.xp = Math.max(0, S.xp - q.xp);
+      logAdd('Quest undone: '+q.title+' (-'+q.xp+' XP)', true);
+    }
+    save(); render();
+  }
+
+  function stepDungeon(id){
+    var d = S.dungeons.filter(function(x){ return x.id===id; })[0]; if(!d || d.cleared) return;
+    d.progress++;
+    if(d.progress >= d.steps){
+      d.cleared = true; var reward = 40 + d.steps*10;
+      gain(reward, d.stat);
+      logAdd('Dungeon cleared: '+d.title+' (+'+reward+' XP)');
+      toast('Dungeon cleared · +'+reward+' XP');
+    } else {
+      gain(5, d.stat);
+      logAdd('Dungeon step cleared: '+d.title+' ('+d.progress+'/'+d.steps+')');
+      toast('Step '+d.progress+' of '+d.steps+' · +5 XP');
+    }
+    save(); render();
+  }
+
+  function checkin(id){
+    var s = S.shadows.filter(function(x){ return x.id===id; })[0]; if(!s) return;
+    var t = todayStr(); if(s.last === t) return;
+    s.streak = (s.last && dayDiff(s.last, t)===1) ? s.streak+1 : 1;
+    s.last = t; s.best = Math.max(s.best||0, s.streak);
+    gain(8, 'dis');
+    logAdd('Checked in: '+s.name+' ('+s.streak+'-day streak, +8 XP)');
+    toast(s.name+' · day '+s.streak+' · +8 XP');
+    if(s.streak >= 21 && !s.extracted){
+      s.extracted = true; gain(100);
+      logAdd('Shadow extracted: '+s.name+'. +100 XP.');
+      toast('Shadow extracted · +100 XP');
+    }
+    save(); render();
+  }
+
+  /* delegation */
+  document.addEventListener('click', function(e){
+    var t = e.target.closest('[data-quest],[data-delquest],[data-step],[data-deldungeon],[data-checkin],[data-delshadow],[data-alloc],[data-tab]');
+    if(!t) return;
+    if(t.dataset.quest) return toggleQuest(t.dataset.quest);
+    if(t.dataset.delquest){ S.quests = S.quests.filter(function(q){ return q.id!==t.dataset.delquest; }); S.done.ids = S.done.ids.filter(function(i){ return i!==t.dataset.delquest; }); save(); return render(); }
+    if(t.dataset.step) return stepDungeon(t.dataset.step);
+    if(t.dataset.deldungeon){ S.dungeons = S.dungeons.filter(function(d){ return d.id!==t.dataset.deldungeon; }); save(); return render(); }
+    if(t.dataset.checkin) return checkin(t.dataset.checkin);
+    if(t.dataset.delshadow){ S.shadows = S.shadows.filter(function(s){ return s.id!==t.dataset.delshadow; }); save(); return render(); }
+    if(t.dataset.alloc){ if(S.points>0){ S.points--; S.stats[t.dataset.alloc]++; logAdd('Assigned 1 point to '+statName(t.dataset.alloc).n+'.'); save(); render(); } return; }
+    if(t.dataset.tab){ setTab(t.dataset.tab); }
+  });
+
+  function setTab(name){
+    ['quests','dungeons','shadows','log'].forEach(function(n){
+      var on = n===name;
+      $('t-'+n).setAttribute('aria-selected', on);
+      $('p-'+n).hidden = !on;
+    });
+  }
+  document.querySelector('.tabs').addEventListener('keydown', function(e){
+    if(e.key!=='ArrowRight' && e.key!=='ArrowLeft') return;
+    var names=['quests','dungeons','shadows','log'];
+    var cur = names.filter(function(n){ return $('t-'+n).getAttribute('aria-selected')==='true'; })[0];
+    var i = names.indexOf(cur) + (e.key==='ArrowRight'?1:-1);
+    i = (i+names.length)%names.length; setTab(names[i]); $('t-'+names[i]).focus();
+  });
+
+  /* forms */
+  var opts = STATS.map(function(s){ return '<option value="'+s.k+'">'+s.n+'</option>'; }).join('');
+  $('qStat').innerHTML = opts; $('dStat').innerHTML = opts;
+  $('questForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var title = $('qTitle').value.trim(); if(!title) return;
+    S.quests.push({id:uid(), title:title, stat:$('qStat').value, xp:parseInt($('qXp').value,10)});
+    $('qTitle').value=''; save(); render();
+  });
+  $('dungeonForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var title = $('dTitle').value.trim(); if(!title) return;
+    var steps = Math.max(2, Math.min(30, parseInt($('dSteps').value,10)||7));
+    S.dungeons.push({id:uid(), title:title, steps:steps, progress:0, stat:$('dStat').value, cleared:false});
+    logAdd('Dungeon opened: '+title+' ('+steps+' steps).');
+    $('dTitle').value=''; save(); render();
+  });
+  $('shadowForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var name = $('sName').value.trim(); if(!name) return;
+    S.shadows.push({id:uid(), name:name, streak:0, best:0, last:'', extracted:false});
+    logAdd('Habit recruited: '+name+'.');
+    $('sName').value=''; save(); render();
+  });
+  $('name').addEventListener('input', function(){ S.name = this.value.slice(0,20) || 'Hunter'; save(); });
+
+  /* reset (two-step, no dialogs) */
+  var armed = false, armTimer;
+  $('resetBtn').addEventListener('click', function(){
+    var b = this;
+    if(!armed){ armed = true; b.textContent = 'Tap again to erase all progress'; b.classList.add('warn'); armTimer = setTimeout(function(){ armed=false; b.textContent='Reset system'; b.classList.remove('warn'); }, 4000); return; }
+    clearTimeout(armTimer); armed=false; b.textContent='Reset system'; b.classList.remove('warn');
+    S = fresh(); S.seen = true; rollDay(); save(); render(); toast('System reset');
+  });
+
+  /* date + midnight rollover */
+  function paintDate(){ $('date').textContent = new Date().toLocaleDateString([], {weekday:'long', month:'long', day:'numeric'}); }
+  function tick(){ paintDate(); if(rollDay()){ save(); render(); if(penaltyMsg){ toast(penaltyMsg, true); penaltyMsg=''; } } }
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) tick(); });
+  setInterval(tick, 60000);
+
+  /* start */
+  paintDate();
+  rollDay(); save(); render(); bootMessage();
+})();
+</script>
+</body>
+</html>
